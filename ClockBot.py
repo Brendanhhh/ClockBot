@@ -178,6 +178,6 @@ async def clockout(interaction: discord.Interaction, time_str: str = None):
 
 # ----------------------
 # Run the Bot
-#
+#s
 
 bot.run(os.getenv("DISCORD_BOT_TOKEN"))
