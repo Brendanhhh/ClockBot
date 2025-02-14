@@ -1,0 +1,3 @@
+# .gitignore
+bot_key.env
+durable-firefly-450917-c1-53efcba90315.json  # Also ignore the credentials file

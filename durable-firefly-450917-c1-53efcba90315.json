@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "durable-firefly-450917-c1",
+  "private_key_id": "53efcba90315db126cc1b1480dcd3b14fbe4a857",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDKwE83qwQHIFl5\nTDdwfOxb677dj5nkiWXYOgj0sz1PRaKxT6cSTVtJnGZzP3qN8xKl72Oz1fVVd3Kb\niYET5DkWXVW85EvsJ2bL687Dyx+IGEIKCWiTzvuHQM4uDXTn448uIxme9NywcjzY\n8VQZURJz8GnU/QfHlYtR7uhhrCt398bCWxIrPyX2OfncMDN1SCQ1xzvyA6SOsEH9\nv3Td/k67lTAUaOWk1WvifAnk0SvwffIefAAcVh+B1ok10O0HTAKfKXqx7uwLBas0\nEZzCp2FBNDwWh4TheBKod8nnbk+0i7Q76WW+EhEWzNjMQLU4MS69CTJlhrdJsZ3b\nyDPKBFvJAgMBAAECggEAZBC/yDC+PyonHqeQIRN2r/NM8xrBkDqDqlESRHsGAk7S\n+gHe6jiFmnH3Wl/1A4P5Ky5YHdS2TaUzSjJ2IzQbPL955k0ib34OzQwnsxhYCpo2\nVa/JDlI0b897Mt1vWldEPjgSmBIvrWHkSAnrQMdzfQclpHnxUf6rkReBV1ta5Mzj\nKI84u1Oq544vQnJNnR9PE8w3VLN2/Gs2ApnIjfLR4UuEV6BczxDfeTDDAig5NnSN\ndY7rEDO1pPHB1BX6lyL5Xseuq6rVfUM0rC32PUUWB/8WrxAbl1NHRgcFpoUNHrmu\nKsNN+pz3RQk2dhZHZSx4070sGIXXpUyXbIGYDydNdQKBgQDri0MJrL1HsJZM1Ixu\noIbPMY/2Iirp01R1YJJZW8PmcrsPSH10YFXxzBdZ5IcBddQMWk14eTEioUDqhrWJ\nwT4hqTghZlJmDGaBoSVTX1x6h96DA7+Rj7gc7LCgENs/RqYXEwEqHAgacYRfN1CC\neo8S0Nh1LFKkVio7N+AqRuPDVwKBgQDcW/ssiojQxJDzhVQBHR6g7uIwYS9v5ktL\nNepGVkx8XwCIcCK3DkTncafPbEqdOH2v1bvHLOCbNIAiIdDZmNhZC0W7QKE5NrEQ\n3oLP/aZaVz9VuiuJG+Q8asDPfOlaTnw1Ce7uSJZ3MhjbOQLtrHuy/P5Ew7v/zfjL\n+9aWuEeF3wKBgCRi4vw/nw3QDafYvcjpK2oecerH5HEyoD1xqan8LwsOdi8qN5ce\nuqgbqw/L6b8kAJnX6VfPAPQkjO6t2KVrILn6dh1SvS/egodL6YQzmwmiq5D5p0JJ\nPVvahH51nCjuNQIjgW6L3gSXvKco2FsPq8JwWL/hFPMmDGgRfaOKR+0JAoGBAJE7\n5m3S2J2QEGEQDO+2+4riJx3vz84WoKVvYXr+QebuznEeRyMTOoK4O/vPydWZd+0+\nF0cM4vQoRBM66mWgAWeesFTcIeaNj2Io5VqkONHuEwYzb6IsSd8wFOgr0bj9ZYun\nglx2ZwUkdZF3H+D5/4VWjVdREkVkwYff8ezgg/NNAoGBAOi2wPCU+i/Tox739PE0\nj5UQX8QZ+awHx+0DYbHX7w/fn+czAEHwZXRg8B4Gog+DMzrl4uSfRLeobG2Fesjl\nVjFfJhCNQJPQOMqF5ewZeuamxZBXyfBU0vbK1vI1YZANJIw03nsT1gcie1WsCT5t\nBDWubaxWV239uqu7V2Nh30VR\n-----END PRIVATE KEY-----\n",
+  "client_email": "clockin@durable-firefly-450917-c1.iam.gserviceaccount.com",
+  "client_id": "117980342586871108763",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/clockin%40durable-firefly-450917-c1.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
