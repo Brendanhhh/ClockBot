@@ -8,7 +8,9 @@ import logging
 from typing import Literal
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
+
 # Setup logging for debugging and error reporting
 logging.basicConfig(level=logging.INFO)
 
@@ -17,17 +19,28 @@ logging.basicConfig(level=logging.INFO)
 # ----------------------
 SCOPE = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 CREDENTIALS_FILE = "durable-firefly-450917-c1-53efcba90315.json"  # Update if needed
-SHEET_NAME = "TimeSheet"  # Must have headers: Officer Name, Discord ID, Clock-In Time, Clock-Out Time, Total Shift, Subdivision
-#hehe
 
+# TimeSheet Spreadsheet setup
+TIMESHEET_NAME = "TimeSheet"  # This sheet has headers: Callsign, Name, Clock-In Time, Clock-Out Time, Total Shift, Subdivision, Discord ID, Rank
 try:
     creds = ServiceAccountCredentials.from_json_keyfile_name(CREDENTIALS_FILE, SCOPE)
     gc = gspread.authorize(creds)
-    sheet = gc.open(SHEET_NAME).sheet1  # Using the first worksheet
-    logging.info("Successfully connected to Google Sheets.")
+    timesheet = gc.open(TIMESHEET_NAME).sheet1  # Using the first worksheet of TimeSheet
+    logging.info("Successfully connected to TimeSheet.")
 except Exception as e:
-    logging.error("Error connecting to Google Sheets: %s", e)
-    raise e  # Stop the bot if we can't connect
+    logging.error("Error connecting to TimeSheet: %s", e)
+    raise e
+
+# Employee Roster Spreadsheet setup
+EMPLOYEE_ROSTER_URL = "https://docs.google.com/spreadsheets/d/1s4EyS6epMJUroBZgsgvqITWTaLCeYYE4XDiSW4bpGzs/edit?gid=64709600#gid=64709600"
+try:
+    employee_roster_spreadsheet = gc.open_by_url(EMPLOYEE_ROSTER_URL)
+    department_db = employee_roster_spreadsheet.worksheet("Department Database")
+    logging.info("Successfully connected to Employee Roster: Department Database.")
+except Exception as e:
+    logging.error("Error connecting to Employee Roster: %s", e)
+    raise e
+
 
 # ----------------------
 # Discord Bot Setup
@@ -38,15 +51,13 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 # In-memory store for clocked-in users {user_id: clock_in_timestamp}
 clocked_in_users = {}
 
-
 # Helper function: update a single cell using update_cell (row, col, value)
 def update_sheet_cell(row: int, col: int, value: str):
     try:
-        sheet.update_cell(row, col, value)
+        timesheet.update_cell(row, col, value)
     except Exception as e:
         logging.error("Error updating cell at row %s, col %s: %s", row, col, e)
         raise e
-
 
 @bot.event
 async def on_ready():
@@ -54,7 +65,6 @@ async def on_ready():
     await bot.tree.sync()
     logging.info(f"Logged in as {bot.user}")
     print(f"Logged in as {bot.user}")
-
 
 # ----------------------
 # Slash Command: Clock-In
@@ -73,36 +83,56 @@ async def on_ready():
     app_commands.Choice(name="Offroad", value="Offroad"),
     app_commands.Choice(name="Parking", value="Parking"),
     app_commands.Choice(name="FrontDesk", value="FrontDesk"),
-    app_commands.Choice(name="CO", value="CO")
+    app_commands.Choice(name="CO", value="CO"),
+    app_commands.Choice(name="None", value="None")
 ])
 async def clockin(interaction: discord.Interaction, callsign: str, subdivision: Literal[
-    "TEU", "Investigations", "AMSU", "DUI", "SRT", "Offroad", "Parking", "FrontDesk", "CO"]):
+    "TEU", "Investigations", "AMSU", "DUI", "SRT", "Offroad", "Parking", "FrontDesk", "CO", "None"]):
     user_id = str(interaction.user.id)
-    # Officer name is now just the callsign
-    officer_name = callsign
     now = datetime.now()
-    # Use format without seconds
     timestamp = now.strftime("%Y-%m-%d %H:%M")
 
+    # Check if the user is already clocked in
     if user_id in clocked_in_users:
-        await interaction.response.send_message(f"{interaction.user.mention}, you're already clocked in!",
-                                                ephemeral=True)
+        await interaction.response.send_message(
+            f"{interaction.user.mention}, you're already clocked in!",
+            ephemeral=True)
+        return
+
+    # Validate callsign in the Employee Roster (Department Database)
+    try:
+        # Search for the provided callsign in column D.
+        # Note: This assumes that callsigns are unique.
+        cell = department_db.find(callsign)
+        row = cell.row
+        # Retrieve the officer's name (Column E) and rank (Column G)
+        officer_name = department_db.cell(row, 5).value  # Column E
+        rank = department_db.cell(row, 7).value          # Column G
+    except gspread.exceptions.CellNotFound:
+        await interaction.response.send_message(
+            f"{interaction.user.mention}, the callsign `{callsign}` was not found in the employee roster. Please contact a supervisor.",
+            ephemeral=True)
+        return
+    except Exception as e:
+        logging.error("Error while verifying callsign in employee roster: %s", e)
+        await interaction.response.send_message(
+            f"{interaction.user.mention}, an error occurred while verifying your callsign. Please try again later.",
+            ephemeral=True)
         return
 
     try:
+        # Mark the user as clocked in
         clocked_in_users[user_id] = timestamp
-        # Append a new row with six columns:
-        # Officer Name, Discord ID, Clock-In Time, Clock-Out Time, Total Shift, Subdivision
-        sheet.append_row([officer_name, f"'{user_id}", timestamp, "", "", subdivision])
+        # Append a new row to the TimeSheet.
+        # Order: A: Callsign, B: Name, C: Clock-In Time, D: Clock-Out Time, E: Total Shift, F: Subdivision, G: Discord ID, H: Rank
+        timesheet.append_row([callsign, officer_name, timestamp, "", "", subdivision, user_id, rank])
         await interaction.response.send_message(
             f"{interaction.user.mention}, clocked in at {timestamp}. Subdivision: {subdivision}",
-            ephemeral=False
-        )
-        logging.info(f"{officer_name} clocked in at {timestamp}.")
+            ephemeral=False)
+        logging.info(f"{callsign} ({officer_name}) clocked in at {timestamp}.")
     except Exception as e:
         logging.error("Clock-in error: %s", e)
         await interaction.response.send_message("Error clocking in. Please try again.", ephemeral=True)
-
 
 # ----------------------
 # Slash Command: Clock-Out
@@ -137,16 +167,16 @@ async def clockout(interaction: discord.Interaction, time_str: str = None):
         clockin_time = datetime.strptime(clockin_time_str, "%Y-%m-%d %H:%M")
         shift_duration = now - clockin_time
 
-        # Format shift_duration without decimals (HH:MM:SS)
+        # Format shift_duration as HH:MM:SS
         total_seconds = int(shift_duration.total_seconds())
         hours, remainder = divmod(total_seconds, 3600)
         minutes, seconds = divmod(remainder, 60)
         shift_duration_str = f"{hours}:{minutes:02d}:{seconds:02d}"
 
-        # Retrieve all records from the sheet
-        records = sheet.get_all_records()
+        # Retrieve all records from the TimeSheet to locate the matching clock-in record
+        records = timesheet.get_all_records()
         row_to_update = None
-        for idx, record in enumerate(records, start=2):
+        for idx, record in enumerate(records, start=2):  # start=2 because row 1 has headers
             rec_discord = str(record.get("Discord ID")).strip().lstrip("'")
             rec_clockin = record.get("Clock-In Time", "").strip()
             rec_clockout = record.get("Clock-Out Time", "").strip()
@@ -156,28 +186,23 @@ async def clockout(interaction: discord.Interaction, time_str: str = None):
 
         if row_to_update is None:
             await interaction.response.send_message(
-                f"{interaction.user.mention}, your clock-in record was not found in the sheet.", ephemeral=True
-            )
+                f"{interaction.user.mention}, your clock-in record was not found in the sheet.", ephemeral=True)
             return
 
         logging.info("Updating row %s: setting Clock-Out Time to %s and Total Shift to %s",
                      row_to_update, timestamp, shift_duration_str)
-        update_sheet_cell(row_to_update, 4, timestamp)
-        update_sheet_cell(row_to_update, 5, shift_duration_str)
+        update_sheet_cell(row_to_update, 4, timestamp)       # Column D: Clock-Out Time
+        update_sheet_cell(row_to_update, 5, shift_duration_str) # Column E: Total Shift
 
         await interaction.response.send_message(
             f"{interaction.user.mention}, you clocked out at {timestamp}. Shift duration: {shift_duration_str}.",
-            ephemeral=False
-        )
+            ephemeral=False)
         logging.info(f"{username} clocked out at {timestamp} with a duration of {shift_duration_str}.")
     except Exception as e:
         logging.error("Error during clock-out for %s: %s", username, e)
-        await interaction.response.send_message("An error occurred during clock-out. Please try again later.",
-                                                ephemeral=True)
-
+        await interaction.response.send_message("An error occurred during clock-out. Please try again later.", ephemeral=True)
 
 # ----------------------
 # Run the Bot
-#s
-
+# ----------------------
 bot.run(os.getenv("DISCORD_BOT_TOKEN"))
